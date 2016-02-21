@@ -11,7 +11,7 @@ import Foundation
 struct Constants {
 
     // Max number of entities to persist
-    static let maxNumberOfEntities:Int                     = 100000
+    static let maxNumberOfEntities:Int                     = 1000000
 
     // Timeout for tests
     static let maxNumberOfSecondsForTimeout:NSTimeInterval = 1000

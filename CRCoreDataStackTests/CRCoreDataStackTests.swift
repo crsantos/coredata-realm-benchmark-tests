@@ -26,13 +26,14 @@ class CRCoreDataStackTests: XCTestCase {
         super.setUp()
         self.setUpInMemoryManagedObjectContext()
 
+        self.insert1MRecords()
         print("cd.Setup CD stack");
     }
 
     override func tearDown() {
 
-        // self.deleteAll()
         super.tearDown()
+        self.deleteAll()
     }
 
     // MARK: - Insert Main thread
