@@ -101,7 +101,7 @@ class CRCoreDataStackTests: XCTestCase {
 
     // MARK: - Async Fetch Request and move to main thread
 
-    func testQueryBackgroundAndMoveObjectsToMainThread() {
+    func testFetchAllAsyncAndMoveToMainThread() {
 
         self.measureBlock {
 
@@ -139,7 +139,7 @@ class CRCoreDataStackTests: XCTestCase {
         }
     }
 
-    func testQueryBackgroundAndMoveObjectsToMainConvertingThemInContexts() {
+    func testFetchAllAsyncAndMoveToMainThreadConvertingThemInContexts() {
 
         self.measureBlock {
 
