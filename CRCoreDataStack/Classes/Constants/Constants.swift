@@ -14,5 +14,5 @@ struct Constants {
     static let maxNumberOfEntities:Int                     = 1000000
 
     // Timeout for tests
-    static let maxNumberOfSecondsForTimeout:NSTimeInterval = 1000
+    static let maxNumberOfSecondsForTimeout:NSTimeInterval = 2000
 }
