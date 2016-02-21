@@ -40,6 +40,13 @@ A few tests were created:
 * `testFetchAllAsyncAndMoveToMainThread`
 * `testDeleteBulk`
 
+
+# TODO
+
+- [X] Write tests
+- [ ] Add the benchmarks in CSV format
+- [ ] Run tests to 10M, 100M
+
 # License
 
 The MIT License (MIT)
