@@ -19,8 +19,8 @@ class CRRealmStackTests : XCTestCase {
 
         self.measureBlock() {
 
-            self.insert1MRecords()
-            print("realm.testInsertMainThread: Inserted records.")
+            self.insertBulkRecords()
+            print("DONE realm.testInsertMainThread: Inserted records.")
         }
     }
 
@@ -31,7 +31,7 @@ class CRRealmStackTests : XCTestCase {
             let expectation = self.expectationWithDescription("realm.testInsertBackgroundThread")
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
 
-                self.insert1MRecords()
+                self.insertBulkRecords()
                 expectation.fulfill()
             }
         }
@@ -104,15 +104,16 @@ class CRRealmStackTests : XCTestCase {
 
     // MARK: - Private
 
-    func insert1MRecords(){
+    func insertBulkRecords(){
 
+        let birthdate:NSDate = NSDate()
         let realm = try! Realm()
         realm.beginWrite()
         for i in 0...Constants.maxNumberOfEntities{
 
             let person = CRPerson()
-            person.name = "TestPerson #\(i)"
-            person.birthday = NSDate()
+            person.name = "random name #\(i)"
+            person.birthday = birthdate
             person.country = "PT"
             person.street = "Rua Augusta"
             realm.add(person)
@@ -133,8 +134,7 @@ class CRRealmStackTests : XCTestCase {
     override func setUp() {
 
         super.setUp()
-
-        self.insert1MRecords()
+        self.insertBulkRecords()
     }
     
     override func tearDown() {

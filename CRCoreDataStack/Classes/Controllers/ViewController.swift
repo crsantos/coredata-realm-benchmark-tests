@@ -124,10 +124,10 @@ class ViewController: UIViewController {
 
         dispatch_async(dispatch_get_main_queue()) { () -> Void in
 
-            let lastOne = self.tableView.numberOfRowsInSection(0);
-            let indexPath = NSIndexPath.init(forItem: lastOne - 1, inSection: 0);
-            self.tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: .Bottom, animated: true);
-        };
+            let lastOne = self.tableView.numberOfRowsInSection(0)
+            let indexPath = NSIndexPath.init(forItem: lastOne - 1, inSection: 0)
+            self.tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: .Bottom, animated: true)
+        }
     }
 
     func deleteName(person: NSManagedObject) {

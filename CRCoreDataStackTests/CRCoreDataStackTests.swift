@@ -19,30 +19,14 @@ class CRCoreDataStackTests: XCTestCase {
     var managedObjectContext:NSManagedObjectContext!
     var childContext:NSManagedObjectContext!
 
-    // MARK: - Tears
-
-    override func setUp() {
-
-        super.setUp()
-        self.setUpInMemoryManagedObjectContext()
-
-        self.insert1MRecords()
-        print("cd.Setup CD stack");
-    }
-
-    override func tearDown() {
-
-        super.tearDown()
-        self.deleteAll()
-    }
-
     // MARK: - Insert Main thread
 
     func testInsertMainThread() {
 
         self.measureBlock {
 
-            self.insert1MRecords()
+            self.insertBulkRecords()
+            print("DONE cd.testInsertMainThread: Inserted records.")
         }
     }
 
@@ -54,13 +38,13 @@ class CRCoreDataStackTests: XCTestCase {
 
             self.managedObjectContext.performBlock({ () -> Void in
 
-                self.insert1MRecords()
+                self.insertBulkRecords()
                 expectation.fulfill()
             })
         }
         self.waitForExpectationsWithTimeout(Constants.maxNumberOfSecondsForTimeout, handler: { error -> Void in
 
-            print("DONE cd.testQueryAsynchronousFetch!")
+            print("DONE cd.testInsertBackgroundThread!")
         })
     }
 
@@ -70,7 +54,7 @@ class CRCoreDataStackTests: XCTestCase {
 
         self.measureBlock {
 
-            let expectation = self.expectationWithDescription("coredata.testQueryAsynchronousFetch")
+            let expectation = self.expectationWithDescription("cd.testQueryAsynchronousFetch")
 
             let fetchRequest = NSFetchRequest()
             let entity = NSEntityDescription.entityForName("Person", inManagedObjectContext:self.managedObjectContext)
@@ -105,7 +89,7 @@ class CRCoreDataStackTests: XCTestCase {
 
         self.measureBlock {
 
-            let expectation = self.expectationWithDescription("cd.testQueryBackgroundAndMoveObjectsToMainThread")
+            let expectation = self.expectationWithDescription("cd.testFetchAllAsyncAndMoveToMainThread")
 
             let entity = NSEntityDescription.entityForName("Person", inManagedObjectContext:self.managedObjectContext)
 
@@ -117,8 +101,8 @@ class CRCoreDataStackTests: XCTestCase {
                 do {
                     let fetchResults = try self.managedObjectContext.executeFetchRequest(fetchRequest)
 
-                    print("cd.testQueryBackgroundAndMoveObjectsToMainThread: MT? \(NSThread.isMainThread())")
-                    print("cd.testQueryBackgroundAndMoveObjectsToMainThread: Fetched \(fetchResults.count)")
+                    print("cd.testFetchAllAsyncAndMoveToMainThread: MT? \(NSThread.isMainThread())")
+                    print("cd.testFetchAllAsyncAndMoveToMainThread: Fetched \(fetchResults.count)")
 
                     dispatch_async(dispatch_get_main_queue(), { () -> Void in
 
@@ -134,7 +118,7 @@ class CRCoreDataStackTests: XCTestCase {
 
             self.waitForExpectationsWithTimeout(Constants.maxNumberOfSecondsForTimeout, handler: { error -> Void in
 
-                print("DONE cd.testQueryBackgroundAndMoveObjectsToMainThread!")
+                print("DONE cd.testFetchAllAsyncAndMoveToMainThread!")
             })
         }
     }
@@ -143,7 +127,7 @@ class CRCoreDataStackTests: XCTestCase {
 
         self.measureBlock {
 
-            let expectation = self.expectationWithDescription("cd.testQueryBackgroundAndMoveObjectsToMainThread")
+            let expectation = self.expectationWithDescription("cd.testFetchAllAsyncAndMoveToMainThreadConvertingThemInContexts")
 
             let entity = NSEntityDescription.entityForName("Person", inManagedObjectContext:self.managedObjectContext)
 
@@ -155,10 +139,10 @@ class CRCoreDataStackTests: XCTestCase {
                 do {
                     let fetchResults = try self.childContext.executeFetchRequest(fetchRequest)
 
-                    print("cd.testQueryBackgroundAndMoveObjectsToMainThread: MT? \(NSThread.isMainThread())")
-                    print("cd.testQueryBackgroundAndMoveObjectsToMainThread: Fetched \(fetchResults.count)")
+                    print("cd.testFetchAllAsyncAndMoveToMainThreadConvertingThemInContexts: MT? \(NSThread.isMainThread())")
+                    print("cd.testFetchAllAsyncAndMoveToMainThreadConvertingThemInContexts: Fetched \(fetchResults.count)")
 
-                    var objectIds:[AnyObject] = [];
+                    var objectIds:[AnyObject] = []
                     for mObj in fetchResults{
                         if let managedObject = mObj as? NSManagedObject {
                             objectIds.append(managedObject.objectID)
@@ -175,10 +159,9 @@ class CRCoreDataStackTests: XCTestCase {
                     }
                     self.managedObjectContext.performBlock({ () -> Void in
 
-
                         // TODO: get converted objects
                         expectation.fulfill()
-                    });
+                    })
 
                 } catch {
                     let saveError = error as NSError
@@ -189,7 +172,7 @@ class CRCoreDataStackTests: XCTestCase {
             
             self.waitForExpectationsWithTimeout(Constants.maxNumberOfSecondsForTimeout, handler: { error -> Void in
                 
-                print("DONE cd.testQueryBackgroundAndMoveObjectsToMainThread!")
+                print("DONE cd.testFetchAllAsyncAndMoveToMainThreadConvertingThemInContexts!")
             })
         }
     }
@@ -201,7 +184,7 @@ class CRCoreDataStackTests: XCTestCase {
         self.measureBlock {
             
             self.deleteAll()
-            print("DONE cd.testDeleteBulk");
+            print("DONE cd.testDeleteBulk")
         }
     }
 
@@ -222,22 +205,23 @@ class CRCoreDataStackTests: XCTestCase {
 
     // MARK: Insertions
 
-    func insert1MRecords(){
+    func insertBulkRecords(){
 
         let entity =  NSEntityDescription.entityForName("Person",
             inManagedObjectContext:self.managedObjectContext)
 
+        let birthdate:NSDate = NSDate()
         for i in 0...Constants.maxNumberOfEntities{
 
             let person:NSManagedObject = NSManagedObject(
                 entity: entity!,
                 insertIntoManagedObjectContext: self.managedObjectContext)
 
-            person.setValue("random name", forKey: "name")
+            person.setValue("random name #\(i)", forKey: "name")
             person.setValue(i, forKey: "personId")
             person.setValue("PT", forKey: "country")
             person.setValue("Rua Augusta", forKey: "street")
-            person.setValue(NSDate(), forKey: "birthday")
+            person.setValue(birthdate, forKey: "birthday")
         }
 
         do {
@@ -247,6 +231,23 @@ class CRCoreDataStackTests: XCTestCase {
         } catch let error as NSError  {
             print("cd.Could not save \(error), \(error.userInfo)")
         }
+    }
+
+    // MARK: - Setup
+
+    override func setUp() {
+
+        super.setUp()
+        self.setUpInMemoryManagedObjectContext()
+
+        self.insertBulkRecords()
+        print("cd.Setup CD stack")
+    }
+
+    override func tearDown() {
+
+        super.tearDown()
+        self.deleteAll()
     }
 
     // MARK: CD stack
@@ -272,11 +273,11 @@ class CRCoreDataStackTests: XCTestCase {
         } catch {
             print("cd.Adding persistent store coordinator failed")
         }
-        let managedObjectContext = NSManagedObjectContext.init(concurrencyType: NSManagedObjectContextConcurrencyType.MainQueueConcurrencyType);
-        managedObjectContext.persistentStoreCoordinator = persistentStoreCoordinator
 
-        self.managedObjectContext = managedObjectContext;
+
+        self.managedObjectContext = NSManagedObjectContext.init(concurrencyType: NSManagedObjectContextConcurrencyType.MainQueueConcurrencyType)
+        managedObjectContext.persistentStoreCoordinator = persistentStoreCoordinator
         self.childContext = NSManagedObjectContext(concurrencyType: .PrivateQueueConcurrencyType)
-        self.childContext.parentContext = self.managedObjectContext;
+        self.childContext.parentContext = self.managedObjectContext
     }
 }
