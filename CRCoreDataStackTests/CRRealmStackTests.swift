@@ -76,11 +76,13 @@ class CRRealmStackTests : XCTestCase {
 
                 print("realm.testFetchAllAsyncAndMoveToMainThread: Fetched \(people.count) records")
 
-                let personIds = people.flatMap({ $0["personId"] })
+                // optional fetch via primary key: this is the bottleneck here, not the query
+                // let personIds = people.flatMap({ $0["personId"] })
                 dispatch_async(dispatch_get_main_queue()) {
 
                     let aRealm = try! Realm()
-                    let refetchedPeople = aRealm.objects(CRPerson).filter(NSPredicate(format: "personId IN %@",personIds))
+                    // let refetchedPeople = aRealm.objects(CRPerson).filter(NSPredicate(format: "personId IN %@",personIds))
+                    let refetchedPeople = aRealm.objects(CRPerson)
                     print("realm.testFetchAllAsyncAndMoveToMainThread: Re-fetched on MT \(refetchedPeople.count) records")
                     expectation.fulfill()
                 }
