@@ -69,7 +69,7 @@ class CRCoreDataStackTests: XCTestCase {
                 }
             }
 
-            do{
+            do {
                 try self.managedObjectContext.executeRequest(asyncFetch)
             } catch let error as NSError {
 
@@ -91,88 +91,53 @@ class CRCoreDataStackTests: XCTestCase {
 
             let expectation = self.expectationWithDescription("cd.testFetchAllAsyncAndMoveToMainThread")
 
-            let entity = NSEntityDescription.entityForName("Person", inManagedObjectContext:self.managedObjectContext)
-
             let fetchRequest = NSFetchRequest()
+            let entity = NSEntityDescription.entityForName("Person", inManagedObjectContext:self.managedObjectContext)
             fetchRequest.entity = entity
+            let asyncFetch = NSAsynchronousFetchRequest(fetchRequest: fetchRequest) {
+                (NSAsynchronousFetchResult result) -> Void in
+                if let theData = result.finalResult as? [Person] {
 
-            self.managedObjectContext.performBlock({ () -> Void in
-
-                do {
-                    let fetchResults = try self.managedObjectContext.executeFetchRequest(fetchRequest)
-
+                    print("cd.testFetchAllAsyncAndMoveToMainThread: Fetched \(theData.count)")
                     print("cd.testFetchAllAsyncAndMoveToMainThread: MT? \(NSThread.isMainThread())")
-                    print("cd.testFetchAllAsyncAndMoveToMainThread: Fetched \(fetchResults.count)")
+                    do {
+                        var objectIds:[AnyObject] = []
+                        for mObj in theData{
+                            if let managedObject:NSManagedObject = mObj {
+                                objectIds.append(managedObject.objectID)
+                            }
+                        }
+                        var convertedObjects:[AnyObject] = []
+                        for objId in objectIds{
 
-                    dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                            if let objectId = objId as? NSManagedObjectID{
+                                let converted = try self.managedObjectContext.existingObjectWithID(objectId)
+                                convertedObjects.append(converted)
+                            }
+                        }
 
-                        expectation.fulfill()
-                    })
+                        dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                            print("cd.testFetchAllAsyncAndMoveToMainThread Converted: \(convertedObjects.count) objects to main context")
+                            expectation.fulfill()
+                        })
 
-                } catch {
-                    let saveError = error as NSError
-                    expectation.fulfill()
-                    print(saveError)
+                    } catch {
+                        let saveError = error as NSError
+                        print(saveError)
+                    }
                 }
-            })
+            }
+
+            do {
+                try self.managedObjectContext.executeRequest(asyncFetch)
+            } catch let error as NSError {
+
+                print("cd.Could not fetch \(error), \(error.userInfo)")
+            }
 
             self.waitForExpectationsWithTimeout(Constants.maxNumberOfSecondsForTimeout, handler: { error -> Void in
 
                 print("DONE cd.testFetchAllAsyncAndMoveToMainThread!")
-            })
-        }
-    }
-
-    func testFetchAllAsyncAndMoveToMainThreadConvertingThemInContexts() {
-
-        self.measureBlock {
-
-            let expectation = self.expectationWithDescription("cd.testFetchAllAsyncAndMoveToMainThreadConvertingThemInContexts")
-
-            let entity = NSEntityDescription.entityForName("Person", inManagedObjectContext:self.managedObjectContext)
-
-            let fetchRequest = NSFetchRequest()
-            fetchRequest.entity = entity
-
-            self.childContext.performBlock({ () -> Void in
-
-                do {
-                    let fetchResults = try self.childContext.executeFetchRequest(fetchRequest)
-
-                    print("cd.testFetchAllAsyncAndMoveToMainThreadConvertingThemInContexts: MT? \(NSThread.isMainThread())")
-                    print("cd.testFetchAllAsyncAndMoveToMainThreadConvertingThemInContexts: Fetched \(fetchResults.count)")
-
-                    var objectIds:[AnyObject] = []
-                    for mObj in fetchResults{
-                        if let managedObject = mObj as? NSManagedObject {
-                            objectIds.append(managedObject.objectID)
-                        }
-                    }
-                    var convertedObjects:[AnyObject] = []
-                    for objId in objectIds{
-
-                        if let objectId = objId as? NSManagedObjectID{
-                            let converted = try self.managedObjectContext.existingObjectWithID(objectId)
-                            convertedObjects.append(converted)
-                        }
-
-                    }
-                    self.managedObjectContext.performBlock({ () -> Void in
-
-                        // TODO: get converted objects
-                        expectation.fulfill()
-                    })
-
-                } catch {
-                    let saveError = error as NSError
-                    expectation.fulfill()
-                    print(saveError)
-                }
-            })
-            
-            self.waitForExpectationsWithTimeout(Constants.maxNumberOfSecondsForTimeout, handler: { error -> Void in
-                
-                print("DONE cd.testFetchAllAsyncAndMoveToMainThreadConvertingThemInContexts!")
             })
         }
     }
