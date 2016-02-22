@@ -25,7 +25,7 @@ class CRCoreDataStackTests: XCTestCase {
 
         self.measureBlock {
 
-            self.insertBulkRecords()
+            self.insertBulkRecords(self.managedObjectContext)
             print("DONE cd.testInsertMainThread: Inserted records.")
         }
     }
@@ -36,9 +36,9 @@ class CRCoreDataStackTests: XCTestCase {
 
             let expectation = self.expectationWithDescription("cd.testInsertBackgroundThread")
 
-            self.managedObjectContext.performBlock({ () -> Void in
-
-                self.insertBulkRecords()
+            self.childContext.performBlock({ () -> Void in
+                print("cd.testInsertBackgroundThread: MT? \(NSThread.isMainThread())")
+                self.insertBulkRecords(self.childContext)
                 expectation.fulfill()
             })
         }
@@ -205,17 +205,17 @@ class CRCoreDataStackTests: XCTestCase {
 
     // MARK: Insertions
 
-    func insertBulkRecords(){
+    func insertBulkRecords(context:NSManagedObjectContext){
 
         let entity =  NSEntityDescription.entityForName("Person",
-            inManagedObjectContext:self.managedObjectContext)
+            inManagedObjectContext:context)
 
         let birthdate:NSDate = NSDate()
         for i in 0...Constants.maxNumberOfEntities{
 
             let person:NSManagedObject = NSManagedObject(
                 entity: entity!,
-                insertIntoManagedObjectContext: self.managedObjectContext)
+                insertIntoManagedObjectContext: context)
 
             person.setValue("random name #\(i)", forKey: "name")
             person.setValue(i, forKey: "personId")
@@ -225,7 +225,13 @@ class CRCoreDataStackTests: XCTestCase {
         }
 
         do {
-            try self.managedObjectContext.save()
+
+            try context.save()
+
+            if let parentContext = context.parentContext{
+
+                try parentContext.save(); // persist on parent
+            }
             print("cd.Persisted 1M objects")
 
         } catch let error as NSError  {
@@ -240,7 +246,7 @@ class CRCoreDataStackTests: XCTestCase {
         super.setUp()
         self.setUpInMemoryManagedObjectContext()
 
-        self.insertBulkRecords()
+        self.insertBulkRecords(self.managedObjectContext)
         print("cd.Setup CD stack")
     }
 
