@@ -95,6 +95,30 @@ class CRRealmStackTests : XCTestCase {
         }
     }
 
+    func testBatchUpdate(){
+
+        self.measureBlock() {
+
+            let expectation = self.expectationWithDescription("realm.testBatchUpdate")
+
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
+
+                let realm = try! Realm()
+                let people = realm.objects(CRPerson)
+
+                realm.beginWrite()
+                people.setValue("Rua...", forKey: "street")
+                try! realm.commitWrite()
+                expectation.fulfill()
+            }
+        }
+
+        self.waitForExpectationsWithTimeout(Constants.maxNumberOfSecondsForTimeout, handler: { error -> Void in
+
+            print("DONE realm.testBatchUpdate!")
+        })
+    }
+
     func testDeleteBulk(){
 
         self.measureBlock() {

@@ -142,6 +142,36 @@ class CRCoreDataStackTests: XCTestCase {
         }
     }
 
+    func testBatchUpdate(){
+
+        self.measureBlock {
+
+            let expectation = self.expectationWithDescription("cd.testBatchUpdate")
+
+            let entity = NSEntityDescription.entityForName("Person", inManagedObjectContext:self.childContext)
+            let req = NSBatchUpdateRequest.init(entity: entity!)
+            req.propertiesToUpdate = ["street": "Rua..."]
+            req.resultType = .StatusOnlyResultType;
+
+            self.childContext .performBlock({ () -> Void in
+
+                do {
+                    try self.childContext.executeRequest(req)
+                    expectation.fulfill()
+
+                } catch let error as NSError {
+
+                    print("cd.testBatchUpdate Could not update \(error), \(error.userInfo)")
+                    expectation.fulfill()
+                }
+            })
+            self.waitForExpectationsWithTimeout(Constants.maxNumberOfSecondsForTimeout, handler: { error -> Void in
+
+                print("DONE cd.testFetchAllAsyncAndMoveToMainThread!")
+            })
+        }
+    }
+    
     // MARK: - Batch Deletion
     
     func testDeleteBulk() {
