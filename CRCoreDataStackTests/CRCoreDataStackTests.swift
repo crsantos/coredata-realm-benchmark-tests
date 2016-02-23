@@ -62,7 +62,10 @@ class CRCoreDataStackTests: XCTestCase {
             let asyncFetch = NSAsynchronousFetchRequest(fetchRequest: fetchRequest) {
                 (NSAsynchronousFetchResult result) -> Void in
 
-                expectation.fulfill()
+                dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                    expectation.fulfill()
+                })
+
                 print("cd.testQueryAsynchronousFetch: MT? \(NSThread.isMainThread())")
                 if let theData = result.finalResult as? [Person] {
                     print("cd.testQueryAsynchronousFetch: Fetched \(theData.count)")
@@ -75,12 +78,12 @@ class CRCoreDataStackTests: XCTestCase {
 
                 print("cd.Could not fetch \(error), \(error.userInfo)")
             }
-
-            self.waitForExpectationsWithTimeout(Constants.maxNumberOfSecondsForTimeout, handler: { error -> Void in
-
-                print("DONE cd.testQueryAsynchronousFetch!")
-            })
         }
+
+        self.waitForExpectationsWithTimeout(Constants.maxNumberOfSecondsForTimeout, handler: { error -> Void in
+
+            print("DONE cd.testQueryAsynchronousFetch!")
+        })
     }
 
     // MARK: - Async Fetch Request and move to main thread
@@ -134,12 +137,11 @@ class CRCoreDataStackTests: XCTestCase {
 
                 print("cd.Could not fetch \(error), \(error.userInfo)")
             }
-
-            self.waitForExpectationsWithTimeout(Constants.maxNumberOfSecondsForTimeout, handler: { error -> Void in
-
-                print("DONE cd.testFetchAllAsyncAndMoveToMainThread!")
-            })
         }
+        self.waitForExpectationsWithTimeout(Constants.maxNumberOfSecondsForTimeout, handler: { error -> Void in
+
+            print("DONE cd.testFetchAllAsyncAndMoveToMainThread!")
+        })
     }
 
     func testBatchUpdate(){
@@ -165,11 +167,11 @@ class CRCoreDataStackTests: XCTestCase {
                     expectation.fulfill()
                 }
             })
-            self.waitForExpectationsWithTimeout(Constants.maxNumberOfSecondsForTimeout, handler: { error -> Void in
-
-                print("DONE cd.testFetchAllAsyncAndMoveToMainThread!")
-            })
         }
+        self.waitForExpectationsWithTimeout(Constants.maxNumberOfSecondsForTimeout, handler: { error -> Void in
+
+            print("DONE cd.testFetchAllAsyncAndMoveToMainThread!")
+        })
     }
     
     // MARK: - Batch Deletion

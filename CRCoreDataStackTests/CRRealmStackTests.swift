@@ -55,12 +55,11 @@ class CRRealmStackTests : XCTestCase {
                     print("realm.testQueryAsynchronousFetch: Fetched \(people.count) records")
                     expectation.fulfill()
                 }
-
-            self.waitForExpectationsWithTimeout(Constants.maxNumberOfSecondsForTimeout, handler: { error -> Void in
-
-                print("DONE realm.testQueryAsynchronousFetch!")
-            })
         }
+        self.waitForExpectationsWithTimeout(Constants.maxNumberOfSecondsForTimeout, handler: { error -> Void in
+
+            print("DONE realm.testQueryAsynchronousFetch!")
+        })
     }
 
     func testFetchAllAsyncAndMoveToMainThread(){
@@ -87,12 +86,12 @@ class CRRealmStackTests : XCTestCase {
                     expectation.fulfill()
                 }
             }
-
-            self.waitForExpectationsWithTimeout(Constants.maxNumberOfSecondsForTimeout, handler: { error -> Void in
-
-                print("DONE realm.testFetchAllAsyncAndMoveToMainThread!")
-            })
         }
+
+        self.waitForExpectationsWithTimeout(Constants.maxNumberOfSecondsForTimeout, handler: { error -> Void in
+
+            print("DONE realm.testFetchAllAsyncAndMoveToMainThread!")
+        })
     }
 
     func testBatchUpdate(){
