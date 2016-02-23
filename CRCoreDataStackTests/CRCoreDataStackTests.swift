@@ -62,9 +62,7 @@ class CRCoreDataStackTests: XCTestCase {
             let asyncFetch = NSAsynchronousFetchRequest(fetchRequest: fetchRequest) {
                 (NSAsynchronousFetchResult result) -> Void in
 
-                dispatch_async(dispatch_get_main_queue(), { () -> Void in
-                    expectation.fulfill()
-                })
+                expectation.fulfill()
 
                 print("cd.testQueryAsynchronousFetch: MT? \(NSThread.isMainThread())")
                 if let theData = result.finalResult as? [Person] {
@@ -78,12 +76,12 @@ class CRCoreDataStackTests: XCTestCase {
 
                 print("cd.Could not fetch \(error), \(error.userInfo)")
             }
+
+            self.waitForExpectationsWithTimeout(Constants.maxNumberOfSecondsForTimeout, handler: { error -> Void in
+
+                print("DONE cd.testQueryAsynchronousFetch!")
+            })
         }
-
-        self.waitForExpectationsWithTimeout(Constants.maxNumberOfSecondsForTimeout, handler: { error -> Void in
-
-            print("DONE cd.testQueryAsynchronousFetch!")
-        })
     }
 
     // MARK: - Async Fetch Request and move to main thread
